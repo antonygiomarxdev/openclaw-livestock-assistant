@@ -1,0 +1,45 @@
+{
+  "name": "openclaw-livestock-assistant",
+  "version": "1.0.0",
+  "description": "🐄 Asistente de ganadería impulsado por IA para OpenClaw",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  },
+  "keywords": [
+    "livestock",
+    "ganaderia",
+    "openclaw",
+    "ai-assistant",
+    "cattle",
+    "agriculture"
+  ],
+  "author": "OpenClaw",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "openai": "^4.47.1",
+    "uuid": "^9.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.2",
+    "@types/uuid": "^9.0.8",
+    "@typescript-eslint/eslint-plugin": "^7.13.0",
+    "@typescript-eslint/parser": "^7.13.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
