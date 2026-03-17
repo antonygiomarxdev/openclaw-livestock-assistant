@@ -1,16 +1,15 @@
-import OpenAI from 'openai';
+import { generateText, ModelMessage } from 'ai';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage, ChatSession, AssistantResponse } from './types';
 import { SYSTEM_PROMPT, WELCOME_MESSAGE } from './systemPrompt';
+import { ProviderConfig, resolveProviderFromEnv } from './providers';
 
 export class LivestockAssistant {
-  private client: OpenAI;
-  private model: string;
+  private provider: ProviderConfig;
   private sessions: Map<string, ChatSession>;
 
-  constructor(apiKey?: string, model = 'gpt-4o') {
-    this.client = new OpenAI({ apiKey: apiKey ?? process.env.OPENAI_API_KEY });
-    this.model = model;
+  constructor(provider?: ProviderConfig) {
+    this.provider = provider ?? resolveProviderFromEnv();
     this.sessions = new Map();
   }
 
@@ -21,7 +20,7 @@ export class LivestockAssistant {
     const sessionId = uuidv4();
     const session: ChatSession = {
       id: sessionId,
-      messages: [{ role: 'system', content: SYSTEM_PROMPT }],
+      messages: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -31,13 +30,14 @@ export class LivestockAssistant {
 
   /**
    * Sends a message to the assistant and returns the response.
+   * The system prompt is passed separately so any provider can handle it.
    */
   async chat(sessionId: string, message: string): Promise<AssistantResponse> {
     let session = this.sessions.get(sessionId);
     if (!session) {
       session = {
         id: sessionId,
-        messages: [{ role: 'system', content: SYSTEM_PROMPT }],
+        messages: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -47,29 +47,32 @@ export class LivestockAssistant {
     const userMessage: ChatMessage = { role: 'user', content: message };
     session.messages.push(userMessage);
 
-    const completion = await this.client.chat.completions.create({
-      model: this.model,
-      messages: session.messages,
+    // Build the messages array for the SDK (user + assistant only)
+    const sdkMessages: ModelMessage[] = session.messages
+      .filter((m) => m.role === 'user' || m.role === 'assistant')
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+    const { text, usage } = await generateText({
+      model: this.provider.model,
+      system: SYSTEM_PROMPT,
+      messages: sdkMessages,
       temperature: 0.7,
-      max_tokens: 1024,
+      maxOutputTokens: 1024,
     });
 
-    const choice = completion.choices[0];
-    const response = choice.message.content ?? '';
-
-    const assistantMessage: ChatMessage = { role: 'assistant', content: response };
+    const assistantMessage: ChatMessage = { role: 'assistant', content: text };
     session.messages.push(assistantMessage);
     session.updatedAt = new Date();
 
     return {
-      response,
+      response: text,
       sessionId,
-      tokens: completion.usage?.total_tokens,
+      tokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
     };
   }
 
   /**
-   * Returns the message history for a session (excluding the system prompt).
+   * Returns the message history for a session (user + assistant messages only).
    */
   getHistory(sessionId: string): ChatMessage[] {
     const session = this.sessions.get(sessionId);

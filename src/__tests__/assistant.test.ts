@@ -1,26 +1,27 @@
+import { generateText } from 'ai';
 import { LivestockAssistant } from '../assistant/LivestockAssistant';
 import { WELCOME_MESSAGE } from '../assistant/systemPrompt';
-import OpenAI from 'openai';
+import { ProviderConfig } from '../assistant/providers';
+import { LanguageModel } from 'ai';
 
-jest.mock('openai');
+jest.mock('ai', () => ({
+  generateText: jest.fn(),
+}));
 
-const mockCreate = jest.fn();
-(OpenAI as jest.MockedClass<typeof OpenAI>).mockImplementation(() => {
-  return {
-    chat: {
-      completions: {
-        create: mockCreate,
-      },
-    },
-  } as unknown as OpenAI;
-});
+const mockGenerateText = generateText as jest.MockedFunction<typeof generateText>;
+
+// A minimal stub that satisfies the ProviderConfig shape without hitting any real API
+const mockProvider: ProviderConfig = {
+  name: 'openai',
+  model: {} as LanguageModel,
+};
 
 describe('LivestockAssistant', () => {
   let assistant: LivestockAssistant;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    assistant = new LivestockAssistant('test-api-key', 'gpt-4o');
+    assistant = new LivestockAssistant(mockProvider);
   });
 
   describe('createSession', () => {
@@ -48,10 +49,10 @@ describe('LivestockAssistant', () => {
 
   describe('chat', () => {
     it('sends the user message and returns the assistant response', async () => {
-      mockCreate.mockResolvedValue({
-        choices: [{ message: { content: '¡Hola! ¿En qué puedo ayudarte?' } }],
-        usage: { total_tokens: 42 },
-      });
+      mockGenerateText.mockResolvedValue({
+        text: '¡Hola! ¿En qué puedo ayudarte?',
+        usage: { inputTokens: 30, outputTokens: 12 },
+      } as Awaited<ReturnType<typeof generateText>>);
 
       const { sessionId } = assistant.createSession();
       const result = await assistant.chat(sessionId, '¿Cómo prevenir mastitis?');
@@ -61,11 +62,30 @@ describe('LivestockAssistant', () => {
       expect(result.tokens).toBe(42);
     });
 
+    it('passes the system prompt and user messages to generateText', async () => {
+      mockGenerateText.mockResolvedValue({
+        text: 'Respuesta',
+        usage: { inputTokens: 10, outputTokens: 5 },
+      } as Awaited<ReturnType<typeof generateText>>);
+
+      const { sessionId } = assistant.createSession();
+      await assistant.chat(sessionId, 'Hola');
+
+      expect(mockGenerateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.any(String),
+          messages: expect.arrayContaining([
+            expect.objectContaining({ role: 'user', content: 'Hola' }),
+          ]),
+        }),
+      );
+    });
+
     it('auto-creates a session when sessionId does not exist', async () => {
-      mockCreate.mockResolvedValue({
-        choices: [{ message: { content: 'Respuesta de prueba' } }],
-        usage: { total_tokens: 10 },
-      });
+      mockGenerateText.mockResolvedValue({
+        text: 'Respuesta de prueba',
+        usage: { inputTokens: 5, outputTokens: 5 },
+      } as Awaited<ReturnType<typeof generateText>>);
 
       const result = await assistant.chat('unknown-session', 'Hola');
       expect(result.response).toBe('Respuesta de prueba');
@@ -73,20 +93,42 @@ describe('LivestockAssistant', () => {
     });
 
     it('accumulates messages in the session history', async () => {
-      mockCreate.mockResolvedValue({
-        choices: [{ message: { content: 'Respuesta 1' } }],
-        usage: { total_tokens: 5 },
-      });
+      mockGenerateText.mockResolvedValue({
+        text: 'Respuesta 1',
+        usage: { inputTokens: 5, outputTokens: 5 },
+      } as Awaited<ReturnType<typeof generateText>>);
 
       const { sessionId } = assistant.createSession();
       await assistant.chat(sessionId, 'Pregunta 1');
 
       const history = assistant.getHistory(sessionId);
-      expect(history).toHaveLength(2); // user message + assistant response
+      expect(history).toHaveLength(2); // user + assistant
       expect(history[0].role).toBe('user');
       expect(history[0].content).toBe('Pregunta 1');
       expect(history[1].role).toBe('assistant');
       expect(history[1].content).toBe('Respuesta 1');
+    });
+
+    it('sums inputTokens and outputTokens for total token count', async () => {
+      mockGenerateText.mockResolvedValue({
+        text: 'ok',
+        usage: { inputTokens: 100, outputTokens: 50 },
+      } as Awaited<ReturnType<typeof generateText>>);
+
+      const { sessionId } = assistant.createSession();
+      const result = await assistant.chat(sessionId, 'test');
+      expect(result.tokens).toBe(150);
+    });
+
+    it('handles undefined token counts gracefully', async () => {
+      mockGenerateText.mockResolvedValue({
+        text: 'ok',
+        usage: { inputTokens: undefined, outputTokens: undefined },
+      } as Awaited<ReturnType<typeof generateText>>);
+
+      const { sessionId } = assistant.createSession();
+      const result = await assistant.chat(sessionId, 'test');
+      expect(result.tokens).toBe(0);
     });
   });
 
@@ -95,10 +137,9 @@ describe('LivestockAssistant', () => {
       expect(assistant.getHistory('non-existent')).toEqual([]);
     });
 
-    it('excludes the system prompt from history', () => {
+    it('returns empty array for a freshly created session with no messages', () => {
       const { sessionId } = assistant.createSession();
-      const history = assistant.getHistory(sessionId);
-      expect(history.every((m) => m.role !== 'system')).toBe(true);
+      expect(assistant.getHistory(sessionId)).toEqual([]);
     });
   });
 

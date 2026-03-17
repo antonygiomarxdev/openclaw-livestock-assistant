@@ -15,6 +15,8 @@ metadata:
     requires:
       env:
         - OPENAI_API_KEY
+        - ANTHROPIC_API_KEY
+        - GOOGLE_GENERATIVE_AI_API_KEY
       bins:
         - node
     primaryEnv: OPENAI_API_KEY
@@ -50,6 +52,21 @@ bash scripts/start.sh
 
 The server exposes `/health`, `/api/animals`, and `/api/assistant` — see
 [references/api.md](references/api.md) for the full endpoint reference.
+
+## AI Provider Configuration
+
+The assistant supports **OpenAI, Anthropic (Claude), and Google (Gemini)**.
+Set **at least one** API key; the assistant auto-selects the provider.
+
+| Provider | API key env var | Default model |
+|---|---|---|
+| OpenAI | `OPENAI_API_KEY` | `gpt-4o` |
+| Anthropic | `ANTHROPIC_API_KEY` | `claude-3-5-sonnet-20241022` |
+| Google | `GOOGLE_GENERATIVE_AI_API_KEY` | `gemini-1.5-pro` |
+
+Override explicitly via:
+- `AI_PROVIDER=openai|anthropic|google` — force a specific provider
+- `AI_MODEL=<model-id>` — override the model ID for the chosen provider
 
 ## AI Chat
 

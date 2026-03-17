@@ -6,7 +6,7 @@
 
 ## Features
 
-- 🤖 **AI Chat Assistant** — Conversational assistant powered by OpenAI GPT-4o, specialized in livestock management (responds in Spanish)
+- 🤖 **Multi-provider AI** — Works with OpenAI (GPT-4o), Anthropic (Claude), and Google (Gemini); auto-detects the provider from environment variables
 - 🐄 **Herd Management** — Register, update and track animals with full CRUD
 - 🩺 **Health Monitoring** — Vaccination records, treatments, checkups and upcoming reminders
 - 🧬 **Reproduction Tracking** — Heat detection, services, pregnancy confirmations and births
@@ -23,7 +23,7 @@
 | Language | TypeScript 5 |
 | Runtime | Node.js 20+ |
 | Framework | Express 4 |
-| AI | OpenAI API (GPT-4o) |
+| AI | Vercel AI SDK — OpenAI / Anthropic / Google |
 | Testing | Jest + ts-jest |
 | Validation | Zod |
 
@@ -34,7 +34,8 @@
 ```
 src/
 ├── assistant/
-│   ├── LivestockAssistant.ts   # Core AI assistant (session management + OpenAI calls)
+│   ├── LivestockAssistant.ts   # Core AI assistant (multi-provider via Vercel AI SDK)
+│   ├── providers.ts            # Provider factory (OpenAI / Anthropic / Google)
 │   ├── systemPrompt.ts         # Domain-specific system prompt and welcome message
 │   └── types.ts                # Shared TypeScript interfaces and types
 ├── knowledge/
@@ -67,7 +68,14 @@ npm install
 
 ```bash
 cp .env.example .env
-# Edit .env and set your OPENAI_API_KEY
+# Set at least one AI provider key:
+#   OPENAI_API_KEY            → OpenAI  (default model: gpt-4o)
+#   ANTHROPIC_API_KEY         → Anthropic / Claude  (default: claude-3-5-sonnet-20241022)
+#   GOOGLE_GENERATIVE_AI_API_KEY → Google Gemini  (default: gemini-1.5-pro)
+#
+# Optionally override provider/model:
+#   AI_PROVIDER=anthropic
+#   AI_MODEL=claude-opus-4-5
 ```
 
 ### 3. Start the server
