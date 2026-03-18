@@ -6,7 +6,7 @@
 
 ## Features
 
-- 🤖 **Multi-provider AI** — Works with OpenAI (GPT-4o), Anthropic (Claude), and Google (Gemini); auto-detects the provider from environment variables
+- 🤖 **Multi-provider AI** — Works with OpenAI (GPT-5), Anthropic (Claude Opus 4), and Google (Gemini 2.5); auto-detects the provider from environment variables
 - 🐄 **Herd Management** — Register, update and track animals with full CRUD
 - 🩺 **Health Monitoring** — Vaccination records, treatments, checkups and upcoming reminders
 - 🧬 **Reproduction Tracking** — Heat detection, services, pregnancy confirmations and births
@@ -69,13 +69,13 @@ npm install
 ```bash
 cp .env.example .env
 # Set at least one AI provider key:
-#   OPENAI_API_KEY            → OpenAI  (default model: gpt-4o)
-#   ANTHROPIC_API_KEY         → Anthropic / Claude  (default: claude-3-5-sonnet-20241022)
-#   GOOGLE_GENERATIVE_AI_API_KEY → Google Gemini  (default: gemini-1.5-pro)
+#   OPENAI_API_KEY            → OpenAI  (default model: gpt-5)
+#   ANTHROPIC_API_KEY         → Anthropic / Claude  (default: claude-opus-4-6)
+#   GOOGLE_GENERATIVE_AI_API_KEY → Google Gemini  (default: gemini-2.5-pro)
 #
 # Optionally override provider/model:
 #   AI_PROVIDER=anthropic
-#   AI_MODEL=claude-opus-4-5
+#   AI_MODEL=claude-opus-4-6
 ```
 
 ### 3. Start the server

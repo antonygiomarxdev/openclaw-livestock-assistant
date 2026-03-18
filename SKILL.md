@@ -60,9 +60,9 @@ Set **at least one** API key; the assistant auto-selects the provider.
 
 | Provider | API key env var | Default model |
 |---|---|---|
-| OpenAI | `OPENAI_API_KEY` | `gpt-4o` |
-| Anthropic | `ANTHROPIC_API_KEY` | `claude-3-5-sonnet-20241022` |
-| Google | `GOOGLE_GENERATIVE_AI_API_KEY` | `gemini-1.5-pro` |
+| OpenAI | `OPENAI_API_KEY` | `gpt-5` |
+| Anthropic | `ANTHROPIC_API_KEY` | `claude-opus-4-6` |
+| Google | `GOOGLE_GENERATIVE_AI_API_KEY` | `gemini-2.5-pro` |
 
 Override explicitly via:
 - `AI_PROVIDER=openai|anthropic|google` — force a specific provider

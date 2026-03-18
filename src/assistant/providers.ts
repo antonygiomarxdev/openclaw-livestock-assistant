@@ -12,11 +12,12 @@ export interface ProviderConfig {
 
 /**
  * Default model IDs used when none is explicitly specified per provider.
+ * Updated to the latest production models as of early 2026.
  */
 export const DEFAULT_MODELS: Record<ProviderName, string> = {
-  openai: 'gpt-4o',
-  anthropic: 'claude-3-5-sonnet-20241022',
-  google: 'gemini-1.5-pro',
+  openai: 'gpt-5',
+  anthropic: 'claude-opus-4-6',
+  google: 'gemini-2.5-pro',
 };
 
 /**

@@ -19,7 +19,7 @@ fi
 if [[ -z "${OPENAI_API_KEY:-}" && -z "${ANTHROPIC_API_KEY:-}" && -z "${GOOGLE_GENERATIVE_AI_API_KEY:-}" ]]; then
   echo "❌  No AI provider API key found." >&2
   echo "    Set at least one of:" >&2
-  echo "      OPENAI_API_KEY            (OpenAI / GPT-4o)" >&2
+  echo "      OPENAI_API_KEY            (OpenAI / GPT-5)" >&2
   echo "      ANTHROPIC_API_KEY         (Anthropic / Claude)" >&2
   echo "      GOOGLE_GENERATIVE_AI_API_KEY  (Google / Gemini)" >&2
   exit 1
